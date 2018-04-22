@@ -1,0 +1,10 @@
+time quaantum = 1.000000 and average waiting time 36.75 
+time quaantum = 2.000000 and average waiting time 20.06 
+time quaantum = 3.000000 and average waiting time 15.62 
+time quaantum = 4.000000 and average waiting time 13.12 
+time quaantum = 5.000000 and average waiting time 10.50 
+time quaantum = 6.000000 and average waiting time 11.31 
+time quaantum = 7.000000 and average waiting time 11.94 
+time quaantum = 8.000000 and average waiting time 10.38 
+time quaantum = 9.000000 and average waiting time 9.12 
+time quaantum = 10.000000 and average waiting time 6.44 

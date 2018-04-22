@@ -80,7 +80,7 @@ def RR_scheduling(queue , time_quantum ):
     wait_queue = []
     ready_queue = []
     process_list=copy.deepcopy(queue)
-    queueSize = len(process_list)
+    queueSize = len(queue)
     averageWaitTime =0
 
 
@@ -123,7 +123,7 @@ def RR_scheduling(queue , time_quantum ):
     
         averageWaitTime += process.getWaitingTime();
 
-    averageWaitTime /=queueSize
+    averageWaitTime /=float(queueSize)
         
     return schedule, averageWaitTime
 
@@ -315,7 +315,9 @@ def write_output(file_name, schedule, avg_waiting_time):
         for item in schedule:
             f.write(str(item) + '\n')
         f.write('average waiting time %.2f \n'%(avg_waiting_time))
-
+def append_output(file_name, time_quantum, avg_waiting_time):
+   with open(file_name,'a') as f:
+        f.write('time quaantum = {:f} and average waiting time {:.2f} \n'.format(time_quantum,avg_waiting_time))
 
 def main(argv):
     process_list = read_input()
@@ -328,12 +330,24 @@ def main(argv):
     print ("simulating RR ----")
     RR_schedule, RR_avg_waiting_time =  RR_scheduling(process_list,time_quantum = 2)
     write_output('RR.txt', RR_schedule, RR_avg_waiting_time )
+
+    print ("simulating RR for quantum from 1 to 10 ----")
+    for index in range(1,11):
+        RR_schedule, RR_avg_waiting_time =  RR_scheduling(process_list,time_quantum = index)
+        append_output('RR_quantum1to10.txt',  index, RR_avg_waiting_time )
+    
     print ("simulating SRTF ----")
     SRTF_schedule, SRTF_avg_waiting_time =  SRTF_scheduling(process_list)
     write_output('SRTF.txt', SRTF_schedule, SRTF_avg_waiting_time )
     print ("simulating SJF ----")
     SJF_schedule, SJF_avg_waiting_time =  SJF_scheduling(process_list, alpha = 0.5)
     write_output('SJF.txt', SJF_schedule, SJF_avg_waiting_time )
+
+    print ("simulating SJF, alpha from 0 to 1 ----")
+    for index in range(0,11):
+        p = round(index*0.1,2)
+        SJF_schedule, SJF_avg_waiting_time =  SJF_scheduling(process_list, p)
+        append_output('SJF_alpha0to1.txt', p, SJF_avg_waiting_time )
 
 if __name__ == '__main__':
     main(sys.argv[1:])
