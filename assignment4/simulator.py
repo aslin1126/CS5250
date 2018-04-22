@@ -73,24 +73,23 @@ def FCFS_scheduling(process_list):
 #Output_1 : Schedule list contains pairs of (time_stamp, proccess_id) indicating the time switching to that proccess_id
 #Output_2 : Average Waiting Time
 def RR_scheduling(queue , time_quantum ):
-    process_list =[]
     schedule = []
     startTime  =0
     finishTime  =0
     wait_queue = []
     ready_queue = []
+    process_list =[]
     process_list=copy.deepcopy(queue)
-    queueSize = len(queue)
+    queueSize = len(process_list)
     averageWaitTime =0
 
-
     while (not (len(wait_queue) == 0 and len(ready_queue) == 0 and len(process_list) == 0)):
-        
+        #step 1 add process to the ready queue
         while(len(process_list) != 0 and process_list[0].arrive_time <= finishTime ):
             ready_queue.append(process_list[0])
             process_list.pop(0)
 
-        
+        #step2 get the current runing process 
         if (len(ready_queue) != 0):
             process = ready_queue[0]
             ready_queue.pop(0)
@@ -101,29 +100,25 @@ def RR_scheduling(queue , time_quantum ):
             process = wait_queue[0]
             wait_queue.pop(0)
 
-
+        #step3 calculate the start time and finished time based on the time _quantum
         startTime = max(process.arrive_time,finishTime);
         finishTime = startTime + time_quantum;
 
+        #step4: update the process used time
         process.setUsedTime(process.getUsedTime()+time_quantum);
-
-
+        #step5: check remaining time , if greater than 0, add to wait queue, otherwire update the finished time 
         if(process.getRestRequireTime() > 0):
             wait_queue.append(process)
-        else:
-            finishTime = finishTime + process.getRestRequireTime();
-            
-                
+        else: # adjust the finish time 
+            finishTime = finishTime + process.getRestRequireTime();            
+        #step6: update the wait time     
         if(process.getUsedTime()>time_quantum) :  
             process.setWaitingTime(startTime-process.getUsedTime()+ time_quantum - process.arrive_time)
         else :
             process.setWaitingTime(startTime-process.arrive_time)
-
-        schedule.append((startTime,process.id))
-    
+        schedule.append((startTime,process.id)) 
         averageWaitTime += process.getWaitingTime();
-
-    averageWaitTime /=float(queueSize)
+    averageWaitTime /=queueSize
         
     return schedule, averageWaitTime
 
@@ -139,17 +134,18 @@ def SRTF_scheduling(queue):
     running=None
     process_list = []
     queueSize = len(queue)
-    
     process_list=copy.deepcopy(queue)
+
+    #step1: get the ready_queue
     for process in process_list:
         if process.arrive_time <= runtime: # If arrival time is less/equal to runtime submit
             ready_queue.append(process) # those processes to the ready queue
             j =process_list.index(process) # Get the index of the value
             process_list.pop(j)
-
-
-
+            
+    #step2: sort the process based on remain_time in increase order
     ready_queue= sorted(ready_queue, key=lambda process: process.remain_time)
+    
     #print('first process is ', ready_queue[0].id)
     while (len(done_queue) < queueSize):
         modified =False
@@ -165,19 +161,21 @@ def SRTF_scheduling(queue):
                     process_list.pop(j)
         else:
             running = ready_queue[0].id
-            #print('current running process is ', ready_queue[0].id)
+
+            
             while modified == False:
                 #print('runtime is ',runtime)
                 schedule.append((runtime,ready_queue[0].id))
                 runtime+=1
                 ready_queue[0].used_time +=1
                 ready_queue[0].remain_time -= 1
-                
+
+                #step3: updateh ready_queue wait time 
                 for index in range(len(ready_queue)): #Increases processes in ready queue wait times
                     if index !=0:
                         ready_queue[index].wait_time+=1
 
-            
+                #step4: if the ready_queue process is finished, then move to done queue
                 if ready_queue[0].used_time==ready_queue[0].burst_time: #Process has terminated its self
                     #print('finish process is ', ready_queue[0].id,ready_queue[0].used_time )
                     ready_queue[0].finish_time=runtime 
@@ -186,6 +184,7 @@ def SRTF_scheduling(queue):
                     ready_queue.pop(0) #Process gives up CPU
                     modified=True
 
+                #step5: update the ready queue
                 for process in process_list:
                     if process.arrive_time <= runtime: # If arrival time is less/equal to runtime submit
                         #print('ready_queue added is ', process.id)
@@ -193,11 +192,8 @@ def SRTF_scheduling(queue):
                         j = process_list.index(process) # Get the index of the value
                         process_list.pop(j)
 
-    
-                ready_queue = sorted(ready_queue, key=lambda process: process.remain_time)
-                
-
-                
+                #step6: sort the ready queue by remain_time in increase order
+                ready_queue = sorted(ready_queue, key=lambda process: process.remain_time)       
                 if len(ready_queue)==0:
                     #print('ready_queue  is 0  ')
                     modified=True
@@ -205,12 +201,9 @@ def SRTF_scheduling(queue):
                 elif running!=ready_queue[0].id:
                     #print('new running process  is  ',ready_queue[0].id)
                     modified=True
-                #else:
-                    #print('ready_queue sorted is ')
-                    #for index in range(len(ready_queue)):
-                        #print('------', ready_queue[index].id, 'remaining is ',ready_queue[index].remain_time)
+
                
- 
+     #step 7: calculate the wait time 
     for index in range(len(done_queue)):
       averageWaitTime+=done_queue[index].wait_time
 
@@ -229,27 +222,23 @@ def SJF_scheduling(queue, alpha):
     running=None
     process_list = []
     queueSize = len(queue)
-
-
     process_list=copy.deepcopy(queue)
     process_list = sorted(process_list, key=lambda process: process.arrive_time)
     
-    #calculate the predict_time
+    #step1. calculate the predict_time
     for index in range(len(process_list)):
         if index > 0 and index < len(process_list):
             process_list[index].predict_time = process_list[index-1].burst_time * alpha + (1- alpha)*process_list[index-1].predict_time
             #print('------', process_list[index].id, ' --- predict time is ',process_list[index].predict_time)
-       
+
+    #step2. get the ready_queue   
     for process in process_list:
         if process.arrive_time <= runtime: # If arrival time is less/equal to runtime submit
             ready_queue.append(process) # those processes to the ready queue
             j =process_list.index(process) # Get the index of the value
             process_list.pop(j)
-
-    
+ 
     while (len(done_queue) < queueSize):
-        
-        #print('----------start--------- ')
         if(len(ready_queue) == 0):
             #print('idle')
             runtime+=1
@@ -259,43 +248,38 @@ def SJF_scheduling(queue, alpha):
                     ready_queue.append(process) # those processes to the ready queue
                     j =process_list.index(process) # Get the index of the value
                     process_list.pop(j)
-        else:
-            
-            # sort by the predict time 
+        else:       
+            # step3. sort by the predict time 
             ready_queue= sorted(ready_queue, key=lambda process: process.predict_time)
-            
-            #for index in range(len(ready_queue)):
-                #print('------', ready_queue[index].id, 'predict is ',ready_queue[index].predict_time)
-            #print('current running process is ', ready_queue[0].id)
+
+            # step4. wait until the burst_time
             while ready_queue[0].used_time != ready_queue[0].burst_time:
                 schedule.append((runtime,ready_queue[0].id))
                 #print('runtime-------- ', runtime)
                 runtime+=1
                 ready_queue[0].used_time +=1
 
-                
+                # step5. update the wait time 
                 for index in range(len(ready_queue)): #Increases processes in ready queue wait times
                     if index !=0:
                         ready_queue[index].wait_time+=1
 
-            
+                # step6. update the ready_queue
                 for process in process_list:
                     if process.arrive_time <= runtime: # If arrival time is less/equal to runtime submit
                         #print('ready_queue added is ', process.id)
                         ready_queue.append(process) # those processes to the ready queue
                         j = process_list.index(process) # Get the index of the value
                         process_list.pop(j)
-
+                        
+            #step7. Put process in the done queue
             done_queue.append(ready_queue[0]) #Put process in the done queue
-            #print('add process  ', ready_queue[0].id, ' to done queue')
             ready_queue.pop(0)
                 
- 
+    #step8. calculate the wait time 
     for index in range(len(done_queue)):
       averageWaitTime+=done_queue[index].wait_time
-
-    averageWaitTime /= queueSize
-    
+    averageWaitTime /= queueSize  
     return schedule, averageWaitTime
 
 
@@ -315,9 +299,10 @@ def write_output(file_name, schedule, avg_waiting_time):
         for item in schedule:
             f.write(str(item) + '\n')
         f.write('average waiting time %.2f \n'%(avg_waiting_time))
-def append_output(file_name, time_quantum, avg_waiting_time):
+def append_output(file_name, time_quantum, avg_waiting_time, name ):
    with open(file_name,'a') as f:
-        f.write('time quaantum = {:f} and average waiting time {:.2f} \n'.format(time_quantum,avg_waiting_time))
+        f.write('time {:s}= {:f} and average waiting time {:.2f} \n'.format(name,time_quantum,avg_waiting_time))
+
 
 def main(argv):
     process_list = read_input()
@@ -334,8 +319,7 @@ def main(argv):
     print ("simulating RR for quantum from 1 to 10 ----")
     for index in range(1,11):
         RR_schedule, RR_avg_waiting_time =  RR_scheduling(process_list,time_quantum = index)
-        append_output('RR_quantum1to10.txt',  index, RR_avg_waiting_time )
-    
+        append_output('RR_quantum1to10.txt',  index, RR_avg_waiting_time , 'time_quantum')
     print ("simulating SRTF ----")
     SRTF_schedule, SRTF_avg_waiting_time =  SRTF_scheduling(process_list)
     write_output('SRTF.txt', SRTF_schedule, SRTF_avg_waiting_time )
@@ -347,7 +331,6 @@ def main(argv):
     for index in range(0,11):
         p = round(index*0.1,2)
         SJF_schedule, SJF_avg_waiting_time =  SJF_scheduling(process_list, p)
-        append_output('SJF_alpha0to1.txt', p, SJF_avg_waiting_time )
-
+        append_output('SJF_alpha0to1.txt', p, SJF_avg_waiting_time, 'alpha')
 if __name__ == '__main__':
     main(sys.argv[1:])
